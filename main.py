@@ -124,7 +124,7 @@ def ai_commentary(funds_data):
 
     try:
         resp = requests.post(
-            "https://open.anspire.cn/v1/chat/completions",
+            "https://open.anspire.cn/api/v1/chat/completions",
             headers={
                 "Authorization": f"Bearer {ANSPIRE_KEY}",
                 "Content-Type": "application/json",
@@ -154,7 +154,7 @@ def calc_performance(history):
         return None
     now_nav = history[0]["nav"]
     result = {}
-    for label, offset in [("7天", 7), ("1月", 30)]:
+    for label, offset in [("7天", 7), ("1月", 22)]:
         if len(history) >= offset + 1:
             past_nav = history[offset]["nav"]
             pct = (now_nav - past_nav) / past_nav * 100
