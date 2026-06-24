@@ -188,7 +188,7 @@ def generate_report(funds_data, funds_history, commentary):
             lines.append(f"近7天: {perf.get('7天', '?')}% | 近1月: {perf.get('1月', '?')}%")
         lines.append("")
 
-    if commentary:
+    if commentary and "生成失败" not in commentary:
         lines.append("---")
         lines.append("### 🤖 AI 简评")
         lines.append(commentary)
