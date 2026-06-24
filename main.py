@@ -130,7 +130,7 @@ def ai_commentary(funds_data):
                 "Content-Type": "application/json",
             },
             json={
-                "model": "gemini-2.5-flash",
+                "model": "deepseek-chat",
                 "messages": [{"role": "user", "content": prompt}],
                 "max_tokens": 300,
             },
