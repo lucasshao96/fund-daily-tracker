@@ -79,10 +79,14 @@ def fetch_fund_all(code):
         if m:
             result["type"] = m.group(1)
 
-        # 基金经理
-        managers = re.findall(r'"name"\s*:\s*"([^"]+)"', text)
-        if managers:
-            result["manager"] = managers[0]
+        # 基金经理 — 精确匹配 Data_currentFundManager
+        m = re.search(r'"JJJLName"\s*:\s*"([^"]+)"', text)
+        if not m:
+            m = re.search(r'Data_currentFundManager\s*=\s*(\[.+?\]);', text, re.DOTALL)
+            if m:
+                mgr_data = json.loads(m.group(1))
+                if mgr_data:
+                    result["manager"] = mgr_data[0].get("name", "") or mgr_data[0].get("JJJLName", "")
 
         # 成立日期
         m = re.search(r'fS_clrq\s*=\s*"([^"]+)"', text)
@@ -237,30 +241,37 @@ def fetch_macro_market():
         "恒生指数": "100.HSI",
         "纳斯达克": "100.NDX",
         "标普500": "100.SPX",
-        "美元人民币": "133.USDCNY",
     }
     result = {}
     codes = ",".join(indices.values())
     try:
-        url = f"https://push2.eastmoney.com/api/qt/ulist.np/get"
-        params = {
-            "fltt": 2, "fields": "f2,f3,f4,f12,f14",
-            "secids": codes,
-        }
+        url = "https://push2.eastmoney.com/api/qt/ulist.np/get"
+        params = {"fltt": 2, "fields": "f2,f3,f4,f12,f14", "secids": codes}
         r = requests.get(url, params=params, timeout=10,
                          headers={"Referer": "https://quote.eastmoney.com/"})
         data = r.json()
         for item in data.get("data", {}).get("diff", []):
-            code = item.get("f12", "")
+            secid = item.get("f12", "")
             for name, c in indices.items():
-                if c.endswith(code) or c == code:
-                    result[name] = {
-                        "price": item.get("f2", "?"),
-                        "pct": item.get("f3", "?"),
-                        "change": item.get("f4", "?"),
-                    }
+                if secid and (c.endswith(secid) or secid.endswith(c.split(".")[-1]) or c == secid):
+                    result[name] = {"price": item.get("f2", "?"), "pct": item.get("f3", "?"),
+                                    "change": item.get("f4", "?")}
     except Exception as e:
         result["_error"] = str(e)[:100]
+
+    # 美元人民币汇率单独获取
+    try:
+        r = requests.get(
+            "https://push2.eastmoney.com/api/qt/stock/get",
+            params={"secid": "133.USDCNY", "fields": "f43,f169,f170"},
+            headers={"Referer": "https://quote.eastmoney.com/"}, timeout=10,
+        )
+        d = r.json().get("data", {})
+        result["美元人民币"] = {"price": d.get("f43", "?"), "pct": d.get("f169", "?"),
+                               "change": d.get("f170", "?")}
+    except Exception:
+        result["美元人民币"] = {"price": "?", "pct": "?"}
+
     return result
 
 
