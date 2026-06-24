@@ -9,12 +9,11 @@ from datetime import datetime
 import requests
 
 # ─── 配置 ───────────────────────────────────────────────────
-FUNDS = [
-    ("016701", "银华海外数字经济"),
-    ("008254", "华宝致远混合"),
-    ("002891", "华夏移动互联"),
-    ("539002", "建信新兴市场"),
-]
+def load_funds():
+    """从 FUND_LIST 环境变量解析基金列表。格式: 代码,代码,..."""
+    raw = os.getenv("FUND_LIST") or "016701,008254,002891,539002"
+    codes = [c.strip() for c in raw.split(",") if c.strip()]
+    return [(c, c) for c in codes]  # name 由 API 自动填充
 
 ANSPIRE_KEY = os.getenv("ANSPIRE_API_KEYS") or ""
 EMAIL_SENDER = os.getenv("EMAIL_SENDER") or ""
@@ -334,10 +333,11 @@ def send_email(subj, body):
 
 def main():
     print("📊 基金分析\n")
+    fund_list = load_funds()
     print("  宏观...")
     macro = fetch_macro()
     funds = []
-    for code, name in FUNDS:
+    for code, name in fund_list:
         print(f"  {name}...")
         f = fetch_fund(code, name)
         f["t"] = trend(f)
