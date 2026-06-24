@@ -22,35 +22,41 @@ FUNDS = [
 ]
 
 # 环境变量（GitHub Secrets）
-ANSPIRE_KEY = os.getenv("ANSPIRE_API_KEYS", "")  # 可选：AI 评论
-EMAIL_SENDER = os.getenv("EMAIL_SENDER", "")
-EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD", "")
-EMAIL_RECEIVER = os.getenv("EMAIL_RECEIVER", "")
-EMAIL_SMTP = os.getenv("EMAIL_SMTP", "smtp.qq.com")
-EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+ANSPIRE_KEY = os.getenv("ANSPIRE_API_KEYS") or ""  # 可选：AI 评论
+EMAIL_SENDER = os.getenv("EMAIL_SENDER") or ""
+EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD") or ""
+EMAIL_RECEIVER = os.getenv("EMAIL_RECEIVER") or ""
+EMAIL_SMTP = os.getenv("EMAIL_SMTP") or "smtp.qq.com"
+EMAIL_PORT = int(os.getenv("EMAIL_PORT") or "587")
 
 # ─── 数据获取 ───────────────────────────────────────────────
 def fetch_fund_info(code):
-    """从天天基金获取基金基本信息（名称）"""
-    try:
-        url = f"http://fundgz.1234567.com.cn/js/{code}.js"
-        resp = requests.get(url, headers={"Referer": "http://fund.eastmoney.com/"}, timeout=10)
-        resp.encoding = "utf-8"
-        match = re.search(r'jsonpgz\((.+)\)', resp.text)
-        if match:
-            data = json.loads(match.group(1))
-            return {
-                "code": code,
-                "name": data.get("name", code),
-                "nav": float(data.get("dwjz", 0)),      # 最新净值
-                "est_nav": float(data.get("gsz", 0)),    # 实时估算
-                "est_pct": data.get("gszzl", "0"),       # 估算涨跌幅 %
-                "date": data.get("jzrq", ""),            # 净值日期
-                "nav_time": data.get("gztime", ""),      # 估值时间
-            }
-    except Exception as e:
-        return {"code": code, "name": code, "error": str(e)}
-    return None
+    """从天天基金获取基金基本信息，含重试"""
+    headers = {
+        "Referer": "http://fund.eastmoney.com/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    }
+    for attempt in range(3):
+        try:
+            url = f"http://fundgz.1234567.com.cn/js/{code}.js"
+            resp = requests.get(url, headers=headers, timeout=15)
+            resp.encoding = "utf-8"
+            match = re.search(r'jsonpgz\((.+)\)', resp.text)
+            if match:
+                data = json.loads(match.group(1))
+                return {
+                    "code": code,
+                    "name": data.get("name", code),
+                    "nav": float(data.get("dwjz", 0)),
+                    "est_nav": float(data.get("gsz", 0)),
+                    "est_pct": data.get("gszzl", "0"),
+                    "date": data.get("jzrq", ""),
+                    "nav_time": data.get("gztime", ""),
+                }
+        except Exception as e:
+            if attempt == 2:
+                return {"code": code, "name": code, "error": str(e)[:100]}
+    return {"code": code, "name": code, "error": "max retries"}
 
 
 def fetch_fund_history(code, days=30):
