@@ -80,16 +80,16 @@ def fetch_fund(code, name):
     # 2. 历史净值 (api.fund.eastmoney.com — 稳定)
     try:
         all_records = []
-        for page in range(1, 4):
+        for page in range(1, 25):
             r = requests.get("https://api.fund.eastmoney.com/f10/lsjz", params={
-                "fundCode": code, "pageIndex": page, "pageSize": 100,
+                "fundCode": code, "pageIndex": page, "pageSize": 20,
             }, headers={**h, "Referer": f"https://fundf10.eastmoney.com/jjjz_{code}.html"}, timeout=15)
             records = r.json().get("Data", {}).get("LSJZList", [])
             if not records: break
             all_records.extend(records)
         result["history"] = [
             {"date": x["FSRQ"], "nav": float(x["DWJZ"])}
-            for x in all_records
+            for x in reversed(all_records)   # API 返回新→旧，翻转为旧→新
         ]
     except Exception:
         pass
@@ -221,8 +221,12 @@ def gen_report(funds, macro):
     L = [f"🎯 {today} 周{wd} 基金决策仪表盘",
          f"共{len(funds)}只 | 🟢加仓:{buy} 🟡观望:{watch} 🔴暂停:{sell}", ""]
 
-    # 宏观
-    if macro and not macro.get("_error"):
+    # 宏观 — 仅在有数据时展示
+    has_macro = macro and not macro.get("_error") and any(
+        isinstance(macro.get(n, {}).get("pct"), (int, float))
+        for n in ["上证指数", "纳斯达克"]
+    )
+    if has_macro:
         L.append("🌍 全球市场")
         L.append("| 指数 | 最新 | 涨跌 |")
         L.append("|------|------|------|")
@@ -231,12 +235,11 @@ def gen_report(funds, macro):
             pct = d.get("pct","?")
             sign = "🟢" if (isinstance(pct,(int,float)) and pct>0) else ("🔴" if (isinstance(pct,(int,float)) and pct<0) else "")
             L.append(f"| {n} | {d.get('price','?')} | {sign} {pct}% |")
+        L.append("")
 
-        # 研判
         us = macro.get("纳斯达克",{}).get("pct",0) or 0
         cn = macro.get("上证指数",{}).get("pct",0) or 0
         fx = macro.get("美元人民币",{}).get("price",7.2)
-        L.append("")
         L.append("📌 市场环境")
         if isinstance(us,(int,float)) and us>0.3: L.append("  ✅ 美股偏强，QDII有利")
         elif isinstance(us,(int,float)) and us<-0.3: L.append("  ⚠️ 美股承压，QDII谨慎")
