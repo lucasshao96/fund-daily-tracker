@@ -22,6 +22,7 @@ jobs:
 
       - name: Run tracker
         env:
+          FUND_LIST: ${{ secrets.FUND_LIST }}
           ANSPIRE_API_KEYS: ${{ secrets.ANSPIRE_API_KEYS }}
           EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
