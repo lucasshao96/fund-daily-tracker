@@ -29,9 +29,10 @@
 | Secret | 说明 | 必填 |
 |--------|------|:--:|
 | `FUND_LIST` | 基金代码，逗号分隔，如 `016701,008254,539002` | ✅ |
-| `EMAIL_SENDER` | 发件 QQ 邮箱 | ✅ |
-| `EMAIL_PASSWORD` | QQ 邮箱 SMTP 授权码（设置→账户→POP3/SMTP→开启） | ✅ |
-| `EMAIL_RECEIVER` | 收件邮箱 | ✅ |
+| `EMAIL_SENDER` | 发件邮箱（如 `your@qq.com` 或 `your@gmail.com`） | ✅ |
+| `EMAIL_PASSWORD` | 邮箱 SMTP 授权码（QQ邮箱: 设置→账户→POP3/SMTP→开启; Gmail: 开启两步验证→应用专用密码） | ✅ |
+| `EMAIL_RECEIVER` | 收件邮箱（可同发件） | ✅ |
+| `EMAIL_SMTP` | SMTP 服务器（默认 `smtp.qq.com`，Gmail 填 `smtp.gmail.com`） | ❌ |
 | `ANSPIRE_API_KEYS` | [Anspire](https://open.anspire.cn/) API Key（可选，用于 AI 增强） | ❌ |
 
 ### 3. 启用 Actions
