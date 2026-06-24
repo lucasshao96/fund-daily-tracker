@@ -103,7 +103,10 @@ def fetch_fund_all(code):
         m = re.search(r'Data_netWorthTrend\s*=\s*(\[.+?\]);', text, re.DOTALL)
         if m:
             nav_data = json.loads(m.group(1))
-            result["history"] = [{"date": x["x"], "nav": x["y"]} for x in nav_data]
+            result["history"] = [
+                {"date": datetime.fromtimestamp(x["x"] / 1000).strftime("%Y-%m-%d"), "nav": x["y"]}
+                for x in nav_data
+            ]
 
         # 累计净值 Data_ACWorthTrend
         m = re.search(r'Data_ACWorthTrend\s*=\s*(\[.+?\]);', text, re.DOTALL)
@@ -112,7 +115,7 @@ def fetch_fund_all(code):
             # 合并
             for i, d in enumerate(ac_data):
                 if i < len(result["history"]):
-                    result["history"][i]["ac_nav"] = d["y"]
+                    result["history"][i]["ac_nav"] = round(d["y"], 4)
 
         # 资产配置 Data_assetAllocation
         m = re.search(r'Data_assetAllocation\s*=\s*(\[.+?\]);', text, re.DOTALL)
