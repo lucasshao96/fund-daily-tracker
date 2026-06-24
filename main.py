@@ -72,13 +72,24 @@ def fetch_fund_history(code, days=30):
         }
         headers = {
             "Referer": f"https://fundf10.eastmoney.com/jjjz_{code}.html",
-            "User-Agent": "Mozilla/5.0",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
         }
-        resp = requests.get(url, params=params, headers=headers, timeout=10)
-        data = resp.json()
-        records = data.get("Data", {}).get("LSJZList", [])
+        # 多爬几页（每页 20 条），确保能覆盖 30 天
+        all_records = []
+        for page in range(1, (days // 20) + 3):
+            try:
+                p = dict(params)
+                p["pageIndex"] = page
+                r = requests.get(url, params=p, headers=headers, timeout=10)
+                data = r.json()
+                records = data.get("Data", {}).get("LSJZList", [])
+                if not records:
+                    break
+                all_records.extend(records)
+            except Exception:
+                break
         nav_list = []
-        for r in records[:days]:
+        for r in all_records[:days]:
             nav_list.append({
                 "date": r["FSRQ"],
                 "nav": float(r["DWJZ"]),
@@ -125,7 +136,13 @@ def ai_commentary(funds_data):
             },
             timeout=30,
         )
-        return resp.json()["choices"][0]["message"]["content"]
+        body = resp.json()
+        # handle various response formats
+        if "choices" in body:
+            return body["choices"][0]["message"]["content"]
+        if "data" in body:
+            return str(body["data"])[:500]
+        return f"API 返回异常: {resp.status_code} {str(body)[:200]}"
     except Exception as e:
         return f"(AI 评论生成失败: {e})"
 
