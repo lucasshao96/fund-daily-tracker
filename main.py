@@ -26,30 +26,44 @@ UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
 
 # ─── 宏观市场 ───────────────────────────────────────────────
 def fetch_macro():
-    """抓取主要指数"""
-    secids = ["1.000001", "0.399001", "0.399006", "100.HSI", "100.NDX", "100.SPX"]
-    names = ["上证指数", "深证成指", "创业板指", "恒生指数", "纳斯达克", "标普500"]
+    """抓取全球主要指数 — 使用 yfinance（GitHub Actions 美国机房友好）"""
+    import yfinance as yf
+    symbols = {
+        "上证指数": "000001.SS",
+        "深证成指": "399001.SZ",
+        "创业板指": "399006.SZ",
+        "恒生指数": "^HSI",
+        "纳斯达克": "^IXIC",
+        "标普500": "^GSPC",
+    }
     result = {}
     try:
-        r = requests.get(
-            "https://push2.eastmoney.com/api/qt/ulist.np/get",
-            params={"fltt": 2, "fields": "f2,f3,f12", "secids": ",".join(secids)},
-            headers={"Referer": "https://quote.eastmoney.com/"}, timeout=15,
+        data = yf.download(
+            " ".join(symbols.values()),
+            period="2d", progress=False, timeout=15
         )
-        for item in r.json().get("data", {}).get("diff", []):
-            idx = secids.index(item["f12"]) if item["f12"] in secids else -1
-            if idx >= 0:
-                result[names[idx]] = {"price": item.get("f2", "?"), "pct": item.get("f3", "?")}
+        for name, sym in symbols.items():
+            try:
+                last = data["Close"][sym].dropna()
+                if len(last) >= 2:
+                    prev, now = last.iloc[-2], last.iloc[-1]
+                    result[name] = {"price": round(float(now), 2),
+                                    "pct": round(float((now - prev) / prev * 100), 2)}
+                elif len(last) >= 1:
+                    result[name] = {"price": round(float(last.iloc[-1]), 2), "pct": "?"}
+            except Exception:
+                result[name] = {"price": "?", "pct": "?"}
     except Exception as e:
         result["_error"] = str(e)[:80]
+
     # 汇率
     try:
-        r = requests.get(
-            "https://push2.eastmoney.com/api/qt/stock/get",
-            params={"secid": "133.USDCNY", "fields": "f43"},
-            headers={"Referer": "https://quote.eastmoney.com/"}, timeout=10,
-        )
-        result["美元人民币"] = {"price": r.json().get("data", {}).get("f43", "?"), "pct": "?"}
+        fx = yf.download("CNY=X", period="2d", progress=False, timeout=10)
+        last = fx["Close"]["CNY=X"].dropna()
+        if len(last) >= 2:
+            prev, now = last.iloc[-2], last.iloc[-1]
+            result["美元人民币"] = {"price": round(float(now), 4),
+                                   "pct": round(float((now - prev) / prev * 100), 2)}
     except Exception:
         result["美元人民币"] = {"price": "?", "pct": "?"}
     return result
