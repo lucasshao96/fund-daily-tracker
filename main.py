@@ -40,7 +40,7 @@ def fetch_macro():
     try:
         data = yf.download(
             " ".join(symbols.values()),
-            period="2d", progress=False, timeout=15
+            period="5d", progress=False, timeout=15
         )
         for name, sym in symbols.items():
             try:
@@ -58,7 +58,7 @@ def fetch_macro():
 
     # 汇率
     try:
-        fx = yf.download("CNY=X", period="2d", progress=False, timeout=10)
+        fx = yf.download("CNY=X", period="5d", progress=False, timeout=10)
         last = fx["Close"]["CNY=X"].dropna()
         if len(last) >= 2:
             prev, now = last.iloc[-2], last.iloc[-1]
