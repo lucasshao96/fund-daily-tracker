@@ -35,7 +35,7 @@
 | `EMAIL_PASSWORD` | 邮箱 SMTP 授权码（QQ邮箱: 设置→账户→POP3/SMTP→开启; Gmail: 开启两步验证→应用专用密码） | ✅ |
 | `EMAIL_RECEIVER` | 收件邮箱（可同发件） | ✅ |
 | `EMAIL_SMTP` | SMTP 服务器（默认 `smtp.qq.com`，Gmail 填 `smtp.gmail.com`） | ❌ |
-| `ANSPIRE_API_KEYS` | [Anspire](https://open.anspire.cn/) API Key（可选，用于 AI 增强） | ❌ |
+| `ANSPIRE_API_KEYS` | [Anspire](https://open.anspire.cn/?share_code=0IDAOSJW) API Key（可选，用于 AI 增强） | ❌ |
 
 ### 3. 启用 Actions
 
