@@ -31,35 +31,33 @@ def fetch_macro():
     symbols = {
         "上证指数": "000001.SS",
         "深证成指": "399001.SZ",
-        "创业板指": "399006.SZ",
+        "创业板指": "SZ399006",
         "恒生指数": "^HSI",
         "纳斯达克": "^IXIC",
         "标普500": "^GSPC",
     }
     result = {}
-    try:
-        data = yf.download(
-            " ".join(symbols.values()),
-            period="5d", progress=False, timeout=15
-        )
-        for name, sym in symbols.items():
-            try:
-                last = data["Close"][sym].dropna()
-                if len(last) >= 2:
-                    prev, now = last.iloc[-2], last.iloc[-1]
-                    result[name] = {"price": round(float(now), 2),
-                                    "pct": round(float((now - prev) / prev * 100), 2)}
-                elif len(last) >= 1:
-                    result[name] = {"price": round(float(last.iloc[-1]), 2), "pct": "?"}
-            except Exception:
+    for name, sym in symbols.items():
+        try:
+            ticker = yf.Ticker(sym)
+            hist = ticker.history(period="5d")
+            last = hist["Close"].dropna()
+            if len(last) >= 2:
+                prev, now = last.iloc[-2], last.iloc[-1]
+                result[name] = {"price": round(float(now), 2),
+                                "pct": round(float((now - prev) / prev * 100), 2)}
+            elif len(last) >= 1:
+                result[name] = {"price": round(float(last.iloc[-1]), 2), "pct": "?"}
+            else:
                 result[name] = {"price": "?", "pct": "?"}
-    except Exception as e:
-        result["_error"] = str(e)[:80]
+        except Exception:
+            result[name] = {"price": "?", "pct": "?"}
 
     # 汇率
     try:
-        fx = yf.download("CNY=X", period="5d", progress=False, timeout=10)
-        last = fx["Close"]["CNY=X"].dropna()
+        fx = yf.Ticker("CNY=X")
+        hist = fx.history(period="5d")
+        last = hist["Close"].dropna()
         if len(last) >= 2:
             prev, now = last.iloc[-2], last.iloc[-1]
             result["美元人民币"] = {"price": round(float(now), 4),
