@@ -31,7 +31,6 @@ def fetch_macro():
     symbols = {
         "上证指数": "000001.SS",
         "深证成指": "399001.SZ",
-        "创业板指": "SZ399006",
         "恒生指数": "^HSI",
         "纳斯达克": "^IXIC",
         "标普500": "^GSPC",
@@ -241,7 +240,7 @@ def gen_report(funds, macro):
         L.append("🌍 全球市场")
         L.append("| 指数 | 最新 | 涨跌 |")
         L.append("|------|------|------|")
-        for n in ["上证指数","深证成指","创业板指","恒生指数","纳斯达克","标普500","美元人民币"]:
+        for n in ["上证指数","深证成指","恒生指数","纳斯达克","标普500","美元人民币"]:
             d = macro.get(n, {})
             pct = d.get("pct","?")
             sign = "🟢" if (isinstance(pct,(int,float)) and pct>0) else ("🔴" if (isinstance(pct,(int,float)) and pct<0) else "")
