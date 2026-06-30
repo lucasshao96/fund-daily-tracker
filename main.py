@@ -476,8 +476,10 @@ def gen_html(funds, macro, ai_results):
         # AI 分析
         ai = ai_results.get(f["code"]) if ai_results else None
         if ai:
+            conf = ai.get('confidence', '')
+            conf_display = f"(置信度: {conf})" if conf else ""
             parts.append(f'<div class="ai-box">'
-                         f'<div class="ai-label">🤖 AI 分析 {f"(置信度: {ai.get('confidence','?')})" if ai.get('confidence') else ""}</div>'
+                         f'<div class="ai-label">🤖 AI 分析 {conf_display}</div>'
                          f'{ai.get("summary","")}<br>'
                          f'⚠️ {ai.get("risk_alert","")}<br>'
                          f'💡 {ai.get("suggestion","")}'
