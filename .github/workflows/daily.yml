@@ -2,8 +2,8 @@ name: 基金每日追踪
 
 on:
   schedule:
-    # 北京时间每天 18:30（UTC 10:30）
-    - cron: "30 10 * * *"
+    # 北京时间每天 14:10（UTC 06:10）
+    - cron: "10 6 * * *"
   workflow_dispatch:  # 允许手动触发
 
 jobs:
@@ -22,6 +22,7 @@ jobs:
 
       - name: Run tracker
         env:
+          FUND_LIST: ${{ secrets.FUND_LIST }}
           ANSPIRE_API_KEYS: ${{ secrets.ANSPIRE_API_KEYS }}
           EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}

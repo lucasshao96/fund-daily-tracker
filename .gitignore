@@ -1,0 +1,19 @@
+# Credentials — NEVER commit tokens or keys
+*.token
+*_token
+*_secret
+.env
+.env.local
+gh_push_token
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
