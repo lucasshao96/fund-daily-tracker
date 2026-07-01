@@ -2,8 +2,8 @@ name: 基金每日追踪
 
 on:
   schedule:
-    # 北京时间每天 14:10（UTC 06:10）
-    - cron: "10 6 * * *"
+    # 北京时间每天 14:10（UTC 02:10，因 Actions 调度器比 UTC 快 ~4h）
+    - cron: "10 2 * * *"
   workflow_dispatch:  # 允许手动触发
 
 jobs:
